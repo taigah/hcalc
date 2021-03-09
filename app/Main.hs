@@ -27,12 +27,22 @@ num = fmap read $ some $ P.satisfy isDigit
 
 number = token num
 
--- expr = term | term + expr | term - expr
+identifier :: Parser String
+identifier = some $ P.satisfy isLower
+
+applyFn :: String -> Number -> Maybe Number
+applyFn "cos" x = Just $ cos x
+applyFn "sin" x = Just $ sin x
+applyFn "exp" x = Just $ exp x
+applyFn _ _ = Nothing 
+
+-- expr = func | term | term + expr | term - expr
+-- func = identifier ( expr )
 -- term = factor | factor * term | factor / term
 -- factor = (expr) | number
 
 expr :: Parser Number
-expr = token $ do
+expr = token $ func <|> do
   a <- token term
   do
     char '+'
@@ -43,6 +53,16 @@ expr = token $ do
       b <- token expr
       return $ a - b
     <|> return a
+
+func :: Parser Number
+func = token $ do
+  fname <- token identifier
+  char '('
+  a <- token expr
+  char ')'
+  case applyFn fname a of
+    Nothing -> P.parserFail "Unrecognized function name"
+    Just result -> return result
 
 term :: Parser Number
 term = token $ do
