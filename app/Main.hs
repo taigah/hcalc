@@ -6,8 +6,9 @@ import Data.Char
 import Control.Applicative
 import Control.Monad
 import System.IO
+import Data.Map.Strict
 
-type Number = Double 
+type Number = Double
 
 type Parser t = P.Parsec String () t
 
@@ -25,78 +26,107 @@ token p = spaces *> p <* spaces
 num :: Parser Number
 num = fmap read $ some $ P.satisfy isDigit
 
+number :: Parser Number
 number = token num
 
 identifier :: Parser String
 identifier = some $ P.satisfy isLower
 
-applyFn :: String -> Number -> Maybe Number
-applyFn "cos" x = Just $ cos x
-applyFn "sin" x = Just $ sin x
-applyFn "exp" x = Just $ exp x
-applyFn _ _ = Nothing 
+data AST =
+  Function String AST |
+  Operator (Number -> Number -> Number) AST AST |
+  Value Number |
+  Constant String
 
--- expr = func | term | term + expr | term - expr
--- func = identifier ( expr )
+eval :: AST -> Context -> Either String Number
+eval (Value n) _ = Right n
+eval (Constant name) ctx = case Data.Map.Strict.lookup name ctx of
+    Nothing -> Left "Constant not found"
+    Just value -> Right value
+
+eval (Operator op a b) ctx = (pure op) <*> (eval a ctx) <*> (eval b ctx)
+eval (Function "cos" x) ctx = cos <$> (eval x ctx)
+eval (Function "sin" x) ctx = sin <$> (eval x ctx)
+eval (Function "tan" x) ctx = tan <$> (eval x ctx)
+eval (Function "exp" x) ctx = exp <$> (eval x ctx)
+eval (Function name _) _ = Left $ "Function '" ++ name ++ "' does not exist"
+
+-- statement = expr eof
+-- expr = term | term + expr | term - expr
 -- term = factor | factor * term | factor / term
--- factor = (expr) | number
+-- factor = "(" expr ")" | number | funcOrConst
+-- funcOrConst = identifier (ε | "(" expr ")")
 
-expr :: Parser Number
-expr = token $ func <|> do
+statement :: Parser AST
+statement = expr <* P.eof
+
+expr :: Parser AST
+expr = token $ do
   a <- token term
   do
     char '+'
     b <- token expr
-    return $ a + b
+    return $ Operator (+) a b
     <|> do
       char '-'
       b <- token expr
-      return $ a - b
+      return $ Operator (-) a b
     <|> return a
 
-func :: Parser Number
-func = token $ do
-  fname <- token identifier
-  char '('
-  a <- token expr
-  char ')'
-  case applyFn fname a of
-    Nothing -> P.parserFail "Unrecognized function name"
-    Just result -> return result
-
-term :: Parser Number
+term :: Parser AST
 term = token $ do
   a <- token factor
   do
     char '*'
     b <- token term
-    return $ a * b
+    return $ Operator (*) a b
     <|> do
       char '/'
       b <- token term
-      return $ a / b
+      return $ Operator (/) a b
     <|> return a
 
-factor :: Parser Number
-factor = token $ number <|> do
+factor :: Parser AST
+factor = token $ (Value <$> number) <|> funcOrConst <|> do
   char '('
   a <- token expr
   char ')'
   return a
 
-eval :: String -> Either P.ParseError Number
-eval s = parse (expr <* P.eof) s
+funcOrConst :: Parser AST
+funcOrConst = token $ do
+  name <- identifier
+  (do
+    char '('
+    a <- token expr
+    char ')'
+    return $ Function name a
+    ) <|> (return $ Constant name)
+
+type Context = Map String Number
+
+ctx :: Context
+ctx = fromList [("pi", pi, "e", exp(1))]
+
+parsed = parse expr "1+pi"
+
+prompt :: IO String
+prompt = do
+  putStr "> "
+  hFlush stdout
+  line <- getLine
+  if line == "" then prompt else return line
 
 main :: IO ()
 main = do
   putStrLn "hcalc 1.0"
   forever $ do
-    putStr "> "
-    hFlush stdout
-    line <- getLine 
-    let res = eval line
+    line <- prompt
+    let res = parse statement line
     case res of
       Left err -> print err
-      Right value -> print value 
+      Right ast -> case eval ast ctx of
+        Left err -> putStrLn err
+        Right res -> print res
     return ()
 

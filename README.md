@@ -5,10 +5,11 @@ A simple terminal calculator written in haskell
 ## Features
 
 * Operators + - * /
+* Function application
+* Constants (pi, e)
 
 ## Planned
 
 * Operators ^
-* Function application
-* Define variables ?
+* User constants
 

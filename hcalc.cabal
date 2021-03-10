@@ -35,6 +35,7 @@ executable hcalc
     -- other-extensions:
     build-depends:
       base ^>=4.14.1.0,
-      parsec
+      parsec,
+      containers
     hs-source-dirs:   app
     default-language: Haskell2010
