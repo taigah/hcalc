@@ -33,6 +33,7 @@ identifier :: Parser String
 identifier = some $ P.satisfy isLower
 
 data AST =
+  Assign String AST |
   Function String AST |
   Operator (Number -> Number -> Number) AST AST |
   Value Number |
@@ -44,6 +45,7 @@ eval (Constant name) ctx = case Data.Map.Strict.lookup name ctx of
     Nothing -> Left "Constant not found"
     Just value -> Right value
 
+eval (Assign _ v) ctx = eval v ctx
 eval (Operator op a b) ctx = (pure op) <*> (eval a ctx) <*> (eval b ctx)
 eval (Function "cos" x) ctx = cos <$> (eval x ctx)
 eval (Function "sin" x) ctx = sin <$> (eval x ctx)
@@ -51,14 +53,24 @@ eval (Function "tan" x) ctx = tan <$> (eval x ctx)
 eval (Function "exp" x) ctx = exp <$> (eval x ctx)
 eval (Function name _) _ = Left $ "Function '" ++ name ++ "' does not exist"
 
--- statement = expr eof
+-- statement = (expr | assignment) eof
 -- expr = term | term + expr | term - expr
 -- term = factor | factor * term | factor / term
 -- factor = "(" expr ")" | number | funcOrConst
 -- funcOrConst = identifier (ε | "(" expr ")")
 
 statement :: Parser AST
-statement = expr <* P.eof
+statement = do
+  a <- (P.try assignment) <|> expr
+  P.eof
+  return a
+
+assignment :: Parser AST
+assignment = token $ do
+  name <- token identifier
+  char '='
+  a <- token expr
+  return $ Assign name a
 
 expr :: Parser AST
 expr = token $ do
@@ -106,7 +118,7 @@ funcOrConst = token $ do
 type Context = Map String Number
 
 ctx :: Context
-ctx = fromList [("pi", pi, "e", exp(1))]
+ctx = fromList [("pi", pi), ("e", exp(1))]
 
 parsed = parse expr "1+pi"
 
