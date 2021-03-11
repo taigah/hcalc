@@ -7,9 +7,18 @@ A simple terminal calculator written in haskell
 * Operators + - * /
 * Function application
 * Constants (pi, e)
-
-## Planned
-
-* Operators ^
 * User constants
+
+## Todo
+
+* Add power operator
+* Uniformize Parsing and Eval messages
+* ans special constant
+* Properly configure cabal
+* Better CLI support (special keys and so on) (see Haskeline)
+
+## Maybe
+
+* Arbitrary arity functions (defined at eval time)
+* Uniformize constants and functions
 
