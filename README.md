@@ -15,7 +15,6 @@ A simple terminal calculator written in haskell
 * Uniformize Parsing and Eval messages
 * ans special constant
 * Properly configure cabal
-* Better CLI support (special keys and so on) (see Haskeline)
 
 ## Maybe
 
