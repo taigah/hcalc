@@ -12,7 +12,6 @@ A simple terminal calculator written in haskell
 
 ## Todo
 
-* Uniformize Parsing and Eval messages
 * Properly configure cabal
 
 ## Maybe

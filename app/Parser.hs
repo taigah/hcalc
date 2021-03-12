@@ -143,6 +143,6 @@ eof = P.eof
 
 parserRun :: Parser a -> String -> Either ParseError a
 parserRun p s = case P.parse p "" s of
-  Left err -> Left $ show err
+  Left err -> Left $ unlines ["ParseError:", show err]
   Right result -> Right result
 

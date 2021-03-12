@@ -49,7 +49,7 @@ eval (Value x) = do
 eval (Constant name) = do
   s <- get
   return $ case lookup name s of
-    Nothing -> Left "Could not find constant"
+    Nothing -> Left $ makeEvalError ("could not find constant '" ++ name ++ "'")
     Just value -> Right value
 
 rememberAns :: Either EvalError Number -> Evaluation (Either EvalError Number)
@@ -81,4 +81,7 @@ applyFn "cos" = cos
 applyFn "sin" = sin
 applyFn "tan" = tan
 applyFn "exp" = exp
+
+makeEvalError :: String -> EvalError
+makeEvalError s = unlines [ "EvalError:", s ]
 
