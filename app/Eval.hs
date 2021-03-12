@@ -65,6 +65,7 @@ applyOp Add = (+)
 applyOp Sub = (-)
 applyOp Mult = (*)
 applyOp Div = (/)
+applyOp Pow = (**)
 
 applyFn :: String -> Number -> Number
 applyFn "cos" = cos

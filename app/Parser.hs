@@ -4,7 +4,7 @@ module Parser (
 
     Number,
     AST (Assign, Function, Operator, Value, Constant),
-    Op (Add, Sub, Mult, Div),
+    Op (Add, Sub, Mult, Div, Pow),
     ParseError
 
     ) where
@@ -25,7 +25,7 @@ data AST =
   Value Number |
   Constant String deriving (Show)
 
-data Op = Add | Sub | Mult | Div deriving (Show)
+data Op = Add | Sub | Mult | Div | Pow deriving (Show)
 
 type Number = Double
 
@@ -35,7 +35,8 @@ type Number = Double
 -- assignment = identifier = expr
 -- expr = term (+ expr | - expr | ε)
 -- term = factor (* term | / term | ε)
--- factor = parenthesizedExpression | number | funcOrConst
+-- factor = unit (^ factor | ε)
+-- unit = parenthesizedExpression | number | funcOrConst
 -- parenthesizedExpression = "(" expr ")"
 -- funcOrConst = identifier (parenthesizedExpression | ε)
 
@@ -82,12 +83,22 @@ term = do
     <?> "term"
 
 factor :: Parser AST
-factor = parenthesizedExpression
+factor = do
+  a <- token unit
+  do
+    char '^'
+    b <- token factor
+    return $ Operator Pow a b
+    <|> return a
+    <?> "factor"
+
+
+unit :: Parser AST
+unit = parenthesizedExpression
     <|> do
       a <- token number
       return $ Value a
     <|> funcOrConst
-    <?> "factor"
 
 parenthesizedExpression :: Parser AST
 parenthesizedExpression = do

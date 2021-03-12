@@ -4,14 +4,13 @@ A simple terminal calculator written in haskell
 
 ## Features
 
-* Operators + - * /
+* Operators + - * / ^
 * Function application
 * Constants (pi, e)
 * User constants
 
 ## Todo
 
-* Add power operator
 * Uniformize Parsing and Eval messages
 * ans special constant
 * Properly configure cabal
