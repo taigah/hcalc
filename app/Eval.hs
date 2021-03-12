@@ -52,11 +52,20 @@ eval (Constant name) = do
     Nothing -> Left "Could not find constant"
     Just value -> Right value
 
+rememberAns :: Either EvalError Number -> Evaluation (Either EvalError Number)
+rememberAns res = do
+  case res of
+    Left err -> return $ Left err
+    Right ans -> do
+      modify (insert "ans" ans)
+      return $ Right ans
+      
+
 defaultCtx :: Context
 defaultCtx = fromList [("pi", pi), ("e", exp 1)]
 
 runEval :: AST -> Context -> (Context, Either EvalError Number)
-runEval ast ctx = swap $ runState (eval ast) ctx
+runEval ast ctx = swap $ runState (eval ast >>= rememberAns) ctx
 
 -- UTILS
 

@@ -8,11 +8,11 @@ A simple terminal calculator written in haskell
 * Function application
 * Constants (pi, e)
 * User constants
+* ans constant contains the result of the previous calculation
 
 ## Todo
 
 * Uniformize Parsing and Eval messages
-* ans special constant
 * Properly configure cabal
 
 ## Maybe
