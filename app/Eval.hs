@@ -71,9 +71,7 @@ runEval ast ctx = swap $ runState (eval ast >>= rememberAns) ctx
 
 applyOp :: Op -> Number -> Number -> Number
 applyOp Add = (+)
-applyOp Sub = (-)
 applyOp Mult = (*)
-applyOp Div = (/)
 applyOp Pow = (**)
 
 applyFn :: String -> Number -> Number
@@ -81,6 +79,8 @@ applyFn "cos" = cos
 applyFn "sin" = sin
 applyFn "tan" = tan
 applyFn "exp" = exp
+applyFn "neg" = negate
+applyFn "inv" = (1/)
 
 makeEvalError :: String -> EvalError
 makeEvalError s = unlines [ "EvalError:", s ]

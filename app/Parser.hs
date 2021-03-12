@@ -4,7 +4,7 @@ module Parser (
 
     Number,
     AST (Assign, Function, Operator, Value, Constant),
-    Op (Add, Sub, Mult, Div, Pow),
+    Op (Add, Mult, Pow),
     ParseError
 
     ) where
@@ -25,7 +25,7 @@ data AST =
   Value Number |
   Constant String deriving (Show)
 
-data Op = Add | Sub | Mult | Div | Pow deriving (Show)
+data Op = Add | Mult | Pow deriving (Show, Eq)
 
 type Number = Double
 
@@ -58,13 +58,10 @@ expr :: Parser AST
 expr = do
   a <- token term
   do
-    char '+'
+    sym <- char '+' <|> char '-'
     b <- token expr
-    return $ Operator Add a b
-    <|> do
-      char '-'
-      b <- token expr
-      return $ Operator Sub a b
+    let b' = if sym == '+' then b else Function "neg" b
+    return $ inverseAssociativityRTL $ Operator Add a b'
     <|> return a
     <?> "expression"
 
@@ -72,13 +69,10 @@ term :: Parser AST
 term = do
   a <- token factor
   do
-    char '*'
-    b <- token term
-    return $ Operator Mult a b
-    <|> do
-      char '/'
-      b <- token term
-      return $ Operator Div a b
+    sym <- char '*' <|> char '/'
+    b <- token expr
+    let b' = if sym == '*' then b else Function "inv" b
+    return $ inverseAssociativityRTL $ Operator Mult a b'
     <|> return a
     <?> "term"
 
@@ -145,4 +139,12 @@ parserRun :: Parser a -> String -> Either ParseError a
 parserRun p s = case P.parse p "" s of
   Left err -> Left $ unlines ["ParseError:", show err]
   Right result -> Right result
+
+-- UTILS
+
+inverseAssociativityRTL :: AST -> AST
+inverseAssociativityRTL full@(Operator op l (Operator op2 l' r))
+  | op == op2 = Operator op (Operator op l l') r
+  | otherwise = full
+inverseAssociativityRTL full = full
 
