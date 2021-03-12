@@ -22,4 +22,5 @@ $ cabal install
 
 * Arbitrary arity functions (defined at eval time)
 * Uniformize constants and functions
+* Deal with stdin
 
