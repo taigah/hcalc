@@ -2,6 +2,14 @@
 
 A simple terminal calculator written in haskell
 
+## Install
+
+Clone the repository then
+
+```
+$ cabal install
+```
+
 ## Features
 
 * Operators + - * / ^
